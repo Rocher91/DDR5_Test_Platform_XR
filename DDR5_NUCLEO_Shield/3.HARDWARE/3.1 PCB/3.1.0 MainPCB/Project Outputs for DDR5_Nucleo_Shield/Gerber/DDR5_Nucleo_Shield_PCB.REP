@@ -1,0 +1,300 @@
+*************************************************************
+FileName = DDR5_Nucleo_Shield_PCB.GBR
+AutoAperture = True
+*************************************************************
+Generating : Mechanical 15
+      File : DDR5_Nucleo_Shield_PCB.GM15
+
+    Adding Layer      : Mechanical 15
+
+
+Used DCodes :
+    D12
+    D15
+    D45
+*************************************************************
+
+*************************************************************
+Generating : Mechanical 13
+      File : DDR5_Nucleo_Shield_PCB.GM13
+
+    Adding Layer      : Mechanical 13
+
+
+Used DCodes :
+    D15
+*************************************************************
+
+*************************************************************
+Generating : Mechanical 1
+      File : DDR5_Nucleo_Shield_PCB.GM1
+
+    Adding Layer      : Mechanical 1
+
+
+Used DCodes :
+    D15
+*************************************************************
+
+*************************************************************
+Generating : Keep-Out Layer
+      File : DDR5_Nucleo_Shield_PCB.GKO
+
+    Adding Layer      : Keep-Out Layer
+
+
+Used DCodes :
+*************************************************************
+
+*************************************************************
+Generating : Bottom Overlay
+      File : DDR5_Nucleo_Shield_PCB.GBO
+
+    Adding Layer      : Bottom Overlay
+
+
+Used DCodes :
+*************************************************************
+
+*************************************************************
+Generating : Bottom Paste
+      File : DDR5_Nucleo_Shield_PCB.GBP
+
+    Adding Layer      : Bottom Paste
+
+    Adding Layer      : Bottom Layer
+
+    Adding Layer      : Multi-Layer
+
+
+Used DCodes :
+*************************************************************
+
+*************************************************************
+Generating : Bottom Solder
+      File : DDR5_Nucleo_Shield_PCB.GBS
+
+    Adding Layer      : Bottom Solder
+
+    Adding Layer      : Bottom Layer
+
+    Adding Layer      : Multi-Layer
+
+
+Used DCodes :
+    D30
+    D31
+    D32
+    D33
+    D34
+    D35
+    D36
+    D37
+    D38
+    D39
+*************************************************************
+
+*************************************************************
+Generating : Top Solder
+      File : DDR5_Nucleo_Shield_PCB.GTS
+
+    Adding Layer      : Top Solder
+
+    Adding Layer      : Top Layer
+
+    Adding Layer      : Multi-Layer
+
+
+Used DCodes :
+    D18
+    D19
+    D20
+    D21
+    D22
+    D23
+    D24
+    D25
+    D26
+    D27
+    D28
+    D29
+    D30
+    D31
+    D32
+    D33
+    D34
+    D35
+    D36
+    D37
+    D38
+    D39
+*************************************************************
+
+*************************************************************
+Generating : Top Paste
+      File : DDR5_Nucleo_Shield_PCB.GTP
+
+    Adding Layer      : Top Paste
+
+    Adding Layer      : Top Layer
+
+    Adding Layer      : Multi-Layer
+
+
+Used DCodes :
+    D18
+    D19
+    D20
+    D21
+    D22
+    D23
+    D24
+    D25
+    D26
+    D27
+    D28
+*************************************************************
+
+*************************************************************
+Generating : Top Overlay
+      File : DDR5_Nucleo_Shield_PCB.GTO
+
+    Adding Layer      : Top Overlay
+
+
+Used DCodes :
+    D10
+    D11
+    D12
+    D13
+    D14
+    D15
+    D16
+    D17
+*************************************************************
+
+*************************************************************
+Generating : Bottom Layer
+      File : DDR5_Nucleo_Shield_PCB.GBL
+
+    Adding Layer      : Bottom Layer
+
+    Adding Layer      : Multi-Layer
+
+
+Used DCodes :
+    D13
+    D30
+    D31
+    D32
+    D33
+    D34
+    D37
+    D38
+    D39
+    D41
+    D42
+    D43
+    D44
+*************************************************************
+
+*************************************************************
+Generating : Top Layer
+      File : DDR5_Nucleo_Shield_PCB.GTL
+
+    Adding Layer      : Top Layer
+
+    Adding Layer      : Multi-Layer
+
+
+Used DCodes :
+    D13
+    D18
+    D19
+    D20
+    D21
+    D22
+    D23
+    D24
+    D25
+    D26
+    D27
+    D28
+    D30
+    D31
+    D32
+    D33
+    D34
+    D37
+    D38
+    D39
+    D40
+    D41
+    D42
+    D43
+*************************************************************
+
+*************************************************************
+Generating : Mid-Layer 1
+      File : DDR5_Nucleo_Shield_PCB.G1
+
+    Adding Layer      : Mid-Layer 1
+
+    Adding Layer      : Multi-Layer
+
+
+Used DCodes :
+    D30
+    D31
+    D32
+    D33
+    D34
+    D37
+    D42
+    D43
+    D44
+*************************************************************
+
+*************************************************************
+Generating : Mid-Layer 2
+      File : DDR5_Nucleo_Shield_PCB.G2
+
+    Adding Layer      : Mid-Layer 2
+
+    Adding Layer      : Multi-Layer
+
+
+Used DCodes :
+    D13
+    D39
+    D42
+    D43
+*************************************************************
+
+*************************************************************
+Generating : Drill Drawing
+      File : DDR5_Nucleo_Shield_PCB.GD1
+
+    Adding Drill Pair : Top Layer-Bottom Layer
+
+    Adding Layer      : Drill Drawing
+
+
+Used DCodes :
+    D46
+    D47
+*************************************************************
+
+*************************************************************
+Generating : Drill Guide
+      File : DDR5_Nucleo_Shield_PCB.GG1
+
+    Adding Drill Pair : Top Layer-Bottom Layer
+
+    Adding Layer      : Drill Guide
+
+
+Used DCodes :
+    D46
+*************************************************************
+
