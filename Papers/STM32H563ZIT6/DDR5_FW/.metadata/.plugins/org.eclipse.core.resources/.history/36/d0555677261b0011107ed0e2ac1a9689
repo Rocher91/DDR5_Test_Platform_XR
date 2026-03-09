@@ -1,0 +1,246 @@
+/*
+ * DDR5_Board.h
+ *
+ *  Created on: Mar 8, 2026
+ *      Author: Xavi
+ */
+
+#ifndef DDR5_BOARD_H_
+#define DDR5_BOARD_H_
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#include "stm32h5xx.h"
+#include "stm32h5xx_ll_bus.h"
+#include "stm32h5xx_ll_gpio.h"
+
+/* =========================================================
+ * Board identification
+ * ========================================================= */
+#define BOARD_NAME              "NUCLEO-H563ZI DDR5 TEST PLATFORM"
+
+/* =========================================================
+ * I3C bus (DDR5 sideband)
+ * ========================================================= */
+#define I3C1_SCL_PORT           GPIOB
+#define I3C1_SCL_PIN            LL_GPIO_PIN_8
+
+#define I3C1_SDA_PORT           GPIOB
+#define I3C1_SDA_PIN            LL_GPIO_PIN_9
+
+/* =========================================================
+ * I2C LCD
+ * ========================================================= */
+#define LCD_I2C_SCL_PORT        GPIOB
+#define LCD_I2C_SCL_PIN         LL_GPIO_PIN_6
+
+#define LCD_I2C_SDA_PORT        GPIOB
+#define LCD_I2C_SDA_PIN         LL_GPIO_PIN_7
+
+/* =========================================================
+ * Menu buttons
+ * Active low, internal pull-up, EXTI on falling edge
+ * ========================================================= */
+#define BTN_UP_PORT             GPIOC
+#define BTN_UP_PIN              LL_GPIO_PIN_0
+
+#define BTN_DOWN_PORT           GPIOC
+#define BTN_DOWN_PIN            LL_GPIO_PIN_2
+
+#define BTN_LEFT_PORT           GPIOC
+#define BTN_LEFT_PIN            LL_GPIO_PIN_3
+
+#define BTN_RIGHT_PORT          GPIOC
+#define BTN_RIGHT_PIN           LL_GPIO_PIN_4
+
+#define BTN_OK_PORT             GPIOC
+#define BTN_OK_PIN              LL_GPIO_PIN_5
+
+#define BTN_CANCEL_PORT         GPIOC
+#define BTN_CANCEL_PIN          LL_GPIO_PIN_6
+
+/* =========================================================
+ * Trigger signals
+ * ========================================================= */
+#define TRIGGER_IN_PORT         GPIOB
+#define TRIGGER_IN_PIN          LL_GPIO_PIN_1
+
+#define TRIGGER_OUT_PORT        GPIOB
+#define TRIGGER_OUT_PIN         LL_GPIO_PIN_2
+
+/* =========================================================
+ * Power enable outputs (RDIMM)
+ * External pull-down recommended
+ * ========================================================= */
+#define EN_0_PORT               GPIOD
+#define EN_0_PIN                LL_GPIO_PIN_0
+
+#define EN_1_PORT               GPIOD
+#define EN_1_PIN                LL_GPIO_PIN_1
+
+#define EN_2_PORT               GPIOD
+#define EN_2_PIN                LL_GPIO_PIN_2
+
+#define EN_3_PORT               GPIOD
+#define EN_3_PIN                LL_GPIO_PIN_3
+
+#define EN_4_PORT               GPIOD
+#define EN_4_PIN                LL_GPIO_PIN_4
+
+#define EN_5_PORT               GPIOD
+#define EN_5_PIN                LL_GPIO_PIN_5
+
+#define EN_6_PORT               GPIOC
+#define EN_6_PIN                LL_GPIO_PIN_7
+
+#define EN_7_PORT               GPIOC
+#define EN_7_PIN                LL_GPIO_PIN_8
+
+/* =========================================================
+ * Power good inputs (RDIMM)
+ * ========================================================= */
+#define GOOD_0_PORT             GPIOE
+#define GOOD_0_PIN              LL_GPIO_PIN_8
+
+#define GOOD_1_PORT             GPIOE
+#define GOOD_1_PIN              LL_GPIO_PIN_9
+
+#define GOOD_2_PORT             GPIOE
+#define GOOD_2_PIN              LL_GPIO_PIN_10
+
+#define GOOD_3_PORT             GPIOE
+#define GOOD_3_PIN              LL_GPIO_PIN_11
+
+#define GOOD_4_PORT             GPIOE
+#define GOOD_4_PIN              LL_GPIO_PIN_12
+
+#define GOOD_5_PORT             GPIOE
+#define GOOD_5_PIN              LL_GPIO_PIN_13
+
+#define GOOD_6_PORT             GPIOE
+#define GOOD_6_PIN              LL_GPIO_PIN_14
+
+#define GOOD_7_PORT             GPIOE
+#define GOOD_7_PIN              LL_GPIO_PIN_15
+
+/* =========================================================
+ * Auxiliary GPIO
+ * ========================================================= */
+#define AUX_0_PORT              GPIOB
+#define AUX_0_PIN               LL_GPIO_PIN_10
+
+#define AUX_1_PORT              GPIOB
+#define AUX_1_PIN               LL_GPIO_PIN_12
+
+/* =========================================================
+ * Shift register interface
+ * ========================================================= */
+#define SR_SRCLK_PORT           GPIOF
+#define SR_SRCLK_PIN            LL_GPIO_PIN_2
+
+#define SR_DATA_PORT            GPIOF
+#define SR_DATA_PIN             LL_GPIO_PIN_3
+
+#define SR_RESET_PORT           GPIOF
+#define SR_RESET_PIN            LL_GPIO_PIN_5   /* Active low */
+
+#define SR_LATCH_PORT           GPIOF
+#define SR_LATCH_PIN            LL_GPIO_PIN_6
+
+/* =========================================================
+ * UART VCP (ST-LINK Virtual COM Port)
+ * USART3_TX / USART3_RX
+ * ========================================================= */
+#define VCP_UART_TX_PORT        GPIOD
+#define VCP_UART_TX_PIN         LL_GPIO_PIN_8
+
+#define VCP_UART_RX_PORT        GPIOD
+#define VCP_UART_RX_PIN         LL_GPIO_PIN_9
+
+/* =========================================================
+ * Status LEDs
+ * ========================================================= */
+#define LED_STATUS_0_PORT       GPIOC
+#define LED_STATUS_0_PIN        LL_GPIO_PIN_10  /* PASS */
+
+#define LED_STATUS_1_PORT       GPIOC
+#define LED_STATUS_1_PIN        LL_GPIO_PIN_11  /* FAIL */
+
+#define LED_STATUS_2_PORT       GPIOC
+#define LED_STATUS_2_PIN        LL_GPIO_PIN_12  /* RUN */
+
+#define LED_STATUS_3_PORT       GPIOF
+#define LED_STATUS_3_PIN        LL_GPIO_PIN_7   /* STOP */
+
+/* =========================================================
+ * Generic helpers
+ * ========================================================= */
+#define PIN_HIGH                1U
+#define PIN_LOW                 0U
+
+#define BTN_PRESSED_LEVEL       0U
+#define BTN_RELEASED_LEVEL      1U
+
+#define SHIFTREG_RESET_ASSERT()     LL_GPIO_ResetOutputPin(SR_RESET_PORT, SR_RESET_PIN)
+#define SHIFTREG_RESET_RELEASE()    LL_GPIO_SetOutputPin(SR_RESET_PORT, SR_RESET_PIN)
+
+#define LED_PASS_ON()               LL_GPIO_SetOutputPin(LED_STATUS_0_PORT, LED_STATUS_0_PIN)
+#define LED_PASS_OFF()              LL_GPIO_ResetOutputPin(LED_STATUS_0_PORT, LED_STATUS_0_PIN)
+
+#define LED_FAIL_ON()               LL_GPIO_SetOutputPin(LED_STATUS_1_PORT, LED_STATUS_1_PIN)
+#define LED_FAIL_OFF()              LL_GPIO_ResetOutputPin(LED_STATUS_1_PORT, LED_STATUS_1_PIN)
+
+#define LED_RUN_ON()                LL_GPIO_SetOutputPin(LED_STATUS_2_PORT, LED_STATUS_2_PIN)
+#define LED_RUN_OFF()               LL_GPIO_ResetOutputPin(LED_STATUS_2_PORT, LED_STATUS_2_PIN)
+
+#define LED_STOP_ON()               LL_GPIO_SetOutputPin(LED_STATUS_3_PORT, LED_STATUS_3_PIN)
+#define LED_STOP_OFF()              LL_GPIO_ResetOutputPin(LED_STATUS_3_PORT, LED_STATUS_3_PIN)
+
+/* =========================================================
+ * GPIO clock enable helper
+ * ========================================================= */
+static inline void BOARD_GPIO_ClocksEnable(void)
+{
+    LL_AHB2_GRP1_EnableClock(LL_AHB2_GRP1_PERIPH_GPIOB);
+    LL_AHB2_GRP1_EnableClock(LL_AHB2_GRP1_PERIPH_GPIOC);
+    LL_AHB2_GRP1_EnableClock(LL_AHB2_GRP1_PERIPH_GPIOD);
+    LL_AHB2_GRP1_EnableClock(LL_AHB2_GRP1_PERIPH_GPIOE);
+    LL_AHB2_GRP1_EnableClock(LL_AHB2_GRP1_PERIPH_GPIOF);
+}
+
+/* =========================================================
+ * Small read/write helpers
+ * ========================================================= */
+static inline uint32_t BOARD_ReadPin(GPIO_TypeDef *port, uint32_t pin)
+{
+    return (LL_GPIO_IsInputPinSet(port, pin) != 0U) ? PIN_HIGH : PIN_LOW;
+}
+
+static inline void BOARD_WritePin(GPIO_TypeDef *port, uint32_t pin, uint32_t value)
+{
+    if (value == PIN_HIGH) {
+        LL_GPIO_SetOutputPin(port, pin);
+    } else {
+        LL_GPIO_ResetOutputPin(port, pin);
+    }
+}
+
+static inline uint32_t BOARD_ButtonIsPressed(GPIO_TypeDef *port, uint32_t pin)
+{
+    return (BOARD_ReadPin(port, pin) == BTN_PRESSED_LEVEL) ? 1U : 0U;
+}
+
+/* =========================================================
+ * Optional init prototypes
+ * Implement in board.c if desired
+ * ========================================================= */
+void BOARD_GPIO_Init(void);
+void BOARD_EXTI_Init(void);
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif /* DDR5_BOARD_H_ */

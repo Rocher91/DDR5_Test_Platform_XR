@@ -1,0 +1,19 @@
+#include "stm32h5xx_ll_bus.h"
+#include "stm32h5xx_ll_gpio.h"
+#include "DDR5_Board.h"
+
+int main(void)
+{
+    DDR5_Clock_Init();
+
+    DDR5_GPIO_Init();
+    DDR5_EXTI_Init();
+    DDR5_IRQ_Init();
+
+    LED_PASS_ON();
+
+
+    while (1)
+    {
+    }
+}
