@@ -28,7 +28,7 @@ DItemRevisionGUID=
 ReportSuppressedErrorsInMessages=0
 FSMCodingStyle=eFMSDropDownList_OneProcess
 FSMEncodingStyle=eFMSDropDownList_OneHot
-OutputPath=
+OutputPath=Project Outputs for DDR5_Nucleo_Shield
 LogFolderPath=
 ManagedProjectGUID=
 IncludeDesignInRelease=0
@@ -163,7 +163,7 @@ AnnotateStartValue=1
 AnnotationIndexControlEnabled=0
 AnnotateSuffix=
 AnnotateScope=All
-AnnotateOrder=-1
+AnnotateOrder=9
 DoLibraryUpdate=1
 DoDatabaseUpdate=1
 ClassGenCCAutoEnabled=1
@@ -224,6 +224,266 @@ DItemRevisionGUID=
 GenerateClassCluster=0
 DocumentUniqueId=WJQXEVFR
 
+[GeneratedDocument1]
+DocumentPath=Project Outputs for DDR5_Nucleo_Shield\Test Points\Assembly Testpoint Report for DDR5_Nucleo_Shield_PCB.csv
+DItemRevisionGUID=
+
+[GeneratedDocument2]
+DocumentPath=Project Outputs for DDR5_Nucleo_Shield\BOM\Bill of Materials-DDR5_Nucleo_Shield.xls
+DItemRevisionGUID=
+
+[GeneratedDocument3]
+DocumentPath=Project Outputs for DDR5_Nucleo_Shield\ODB\odb\steps\pcb\layers\comp_+_top\components
+DItemRevisionGUID=
+
+[GeneratedDocument4]
+DocumentPath=Project Outputs for DDR5_Nucleo_Shield\ODB\odb\steps\pcb\eda\data
+DItemRevisionGUID=
+
+[GeneratedDocument5]
+DocumentPath=Project Outputs for DDR5_Nucleo_Shield\ERC\DDR5_Nucleo_Shield.html
+DItemRevisionGUID=
+
+[GeneratedDocument6]
+DocumentPath=Project Outputs for DDR5_Nucleo_Shield\IPC2581\DDR5_Nucleo_Shield_PCB.cvg
+DItemRevisionGUID=
+
+[GeneratedDocument7]
+DocumentPath=Project Outputs for DDR5_Nucleo_Shield\NC Drill\DDR5_Nucleo_Shield_PCB.DRR
+DItemRevisionGUID=
+
+[GeneratedDocument8]
+DocumentPath=Project Outputs for DDR5_Nucleo_Shield\AutoCAD PCB\DDR5_Nucleo_Shield_PCB.DWG
+DItemRevisionGUID=
+
+[GeneratedDocument9]
+DocumentPath=Project Outputs for DDR5_Nucleo_Shield\Gerber\DDR5_Nucleo_Shield_PCB.EXTREP
+DItemRevisionGUID=
+
+[GeneratedDocument10]
+DocumentPath=Project Outputs for DDR5_Nucleo_Shield\Gerber\DDR5_Nucleo_Shield_PCB.G1
+DItemRevisionGUID=
+
+[GeneratedDocument11]
+DocumentPath=Project Outputs for DDR5_Nucleo_Shield\Gerber\DDR5_Nucleo_Shield_PCB.G2
+DItemRevisionGUID=
+
+[GeneratedDocument12]
+DocumentPath=Project Outputs for DDR5_Nucleo_Shield\Gerber\DDR5_Nucleo_Shield_PCB.GBL
+DItemRevisionGUID=
+
+[GeneratedDocument13]
+DocumentPath=Project Outputs for DDR5_Nucleo_Shield\Gerber\DDR5_Nucleo_Shield_PCB.GBO
+DItemRevisionGUID=
+
+[GeneratedDocument14]
+DocumentPath=Project Outputs for DDR5_Nucleo_Shield\Gerber\DDR5_Nucleo_Shield_PCB.GBP
+DItemRevisionGUID=
+
+[GeneratedDocument15]
+DocumentPath=Project Outputs for DDR5_Nucleo_Shield\Gerber\DDR5_Nucleo_Shield_PCB.GBS
+DItemRevisionGUID=
+
+[GeneratedDocument16]
+DocumentPath=Project Outputs for DDR5_Nucleo_Shield\Gerber\DDR5_Nucleo_Shield_PCB.GD1
+DItemRevisionGUID=
+
+[GeneratedDocument17]
+DocumentPath=Project Outputs for DDR5_Nucleo_Shield\Gerber\DDR5_Nucleo_Shield_PCB.GG1
+DItemRevisionGUID=
+
+[GeneratedDocument18]
+DocumentPath=Project Outputs for DDR5_Nucleo_Shield\Gerber\DDR5_Nucleo_Shield_PCB.GKO
+DItemRevisionGUID=
+
+[GeneratedDocument19]
+DocumentPath=Project Outputs for DDR5_Nucleo_Shield\Gerber\DDR5_Nucleo_Shield_PCB.GM1
+DItemRevisionGUID=
+
+[GeneratedDocument20]
+DocumentPath=Project Outputs for DDR5_Nucleo_Shield\Gerber\DDR5_Nucleo_Shield_PCB.GM13
+DItemRevisionGUID=
+
+[GeneratedDocument21]
+DocumentPath=Project Outputs for DDR5_Nucleo_Shield\Gerber\DDR5_Nucleo_Shield_PCB.GM15
+DItemRevisionGUID=
+
+[GeneratedDocument22]
+DocumentPath=Project Outputs for DDR5_Nucleo_Shield\Gerber\DDR5_Nucleo_Shield_PCB.GTL
+DItemRevisionGUID=
+
+[GeneratedDocument23]
+DocumentPath=Project Outputs for DDR5_Nucleo_Shield\Gerber\DDR5_Nucleo_Shield_PCB.GTO
+DItemRevisionGUID=
+
+[GeneratedDocument24]
+DocumentPath=Project Outputs for DDR5_Nucleo_Shield\Gerber\DDR5_Nucleo_Shield_PCB.GTP
+DItemRevisionGUID=
+
+[GeneratedDocument25]
+DocumentPath=Project Outputs for DDR5_Nucleo_Shield\Gerber\DDR5_Nucleo_Shield_PCB.GTS
+DItemRevisionGUID=
+
+[GeneratedDocument26]
+DocumentPath=Project Outputs for DDR5_Nucleo_Shield\DiffReport\DDR5_Nucleo_Shield_PCB.html
+DItemRevisionGUID=
+
+[GeneratedDocument27]
+DocumentPath=Project Outputs for DDR5_Nucleo_Shield\DRC\DDR5_Nucleo_Shield_PCB.html
+DItemRevisionGUID=
+
+[GeneratedDocument28]
+DocumentPath=Project Outputs for DDR5_Nucleo_Shield\FootprintComparison\DDR5_Nucleo_Shield_PCB.html
+DItemRevisionGUID=
+
+[GeneratedDocument29]
+DocumentPath=Project Outputs for DDR5_Nucleo_Shield\NC Drill\DDR5_Nucleo_Shield_PCB.LDP
+DItemRevisionGUID=
+
+[GeneratedDocument30]
+DocumentPath=Project Outputs for DDR5_Nucleo_Shield\Gerber\DDR5_Nucleo_Shield_PCB.REP
+DItemRevisionGUID=
+
+[GeneratedDocument31]
+DocumentPath=Project Outputs for DDR5_Nucleo_Shield\ODB\DDR5_Nucleo_Shield_PCB.REP
+DItemRevisionGUID=
+
+[GeneratedDocument32]
+DocumentPath=Project Outputs for DDR5_Nucleo_Shield\Gerber\DDR5_Nucleo_Shield_PCB.RUL
+DItemRevisionGUID=
+
+[GeneratedDocument33]
+DocumentPath=Project Outputs for DDR5_Nucleo_Shield\ExportSTEP\DDR5_Nucleo_Shield_PCB.step
+DItemRevisionGUID=
+
+[GeneratedDocument34]
+DocumentPath=Project Outputs for DDR5_Nucleo_Shield\NC Drill\DDR5_Nucleo_Shield_PCB.TXT
+DItemRevisionGUID=
+
+[GeneratedDocument35]
+DocumentPath=Project Outputs for DDR5_Nucleo_Shield\AutoCAD SCH\DDR5_System_Connector.DWG
+DItemRevisionGUID=
+
+[GeneratedDocument36]
+DocumentPath=Project Outputs for DDR5_Nucleo_Shield\Design Rule Check - DDR5_Nucleo_Shield_PCB.html
+DItemRevisionGUID=
+
+[GeneratedDocument37]
+DocumentPath=Project Outputs for DDR5_Nucleo_Shield\Test Points\Fabrication Testpoint Report for DDR5_Nucleo_Shield_PCB.csv
+DItemRevisionGUID=
+
+[GeneratedDocument38]
+DocumentPath=Project Outputs for DDR5_Nucleo_Shield\ODB\odb\steps\pcb\layers\bottom_layer\features
+DItemRevisionGUID=
+
+[GeneratedDocument39]
+DocumentPath=Project Outputs for DDR5_Nucleo_Shield\ODB\odb\steps\pcb\layers\bottom_overlay\features
+DItemRevisionGUID=
+
+[GeneratedDocument40]
+DocumentPath=Project Outputs for DDR5_Nucleo_Shield\ODB\odb\steps\pcb\layers\bottom_paste\features
+DItemRevisionGUID=
+
+[GeneratedDocument41]
+DocumentPath=Project Outputs for DDR5_Nucleo_Shield\ODB\odb\steps\pcb\layers\bottom_solder\features
+DItemRevisionGUID=
+
+[GeneratedDocument42]
+DocumentPath=Project Outputs for DDR5_Nucleo_Shield\ODB\odb\steps\pcb\layers\comp_+_top\features
+DItemRevisionGUID=
+
+[GeneratedDocument43]
+DocumentPath=Project Outputs for DDR5_Nucleo_Shield\ODB\odb\steps\pcb\layers\drill\features
+DItemRevisionGUID=
+
+[GeneratedDocument44]
+DocumentPath=Project Outputs for DDR5_Nucleo_Shield\ODB\odb\steps\pcb\layers\keep-out_layer\features
+DItemRevisionGUID=
+
+[GeneratedDocument45]
+DocumentPath=Project Outputs for DDR5_Nucleo_Shield\ODB\odb\steps\pcb\layers\mechanical_1\features
+DItemRevisionGUID=
+
+[GeneratedDocument46]
+DocumentPath=Project Outputs for DDR5_Nucleo_Shield\ODB\odb\steps\pcb\layers\mechanical_13\features
+DItemRevisionGUID=
+
+[GeneratedDocument47]
+DocumentPath=Project Outputs for DDR5_Nucleo_Shield\ODB\odb\steps\pcb\layers\mechanical_15\features
+DItemRevisionGUID=
+
+[GeneratedDocument48]
+DocumentPath=Project Outputs for DDR5_Nucleo_Shield\ODB\odb\steps\pcb\layers\mid-layer_1\features
+DItemRevisionGUID=
+
+[GeneratedDocument49]
+DocumentPath=Project Outputs for DDR5_Nucleo_Shield\ODB\odb\steps\pcb\layers\mid-layer_2\features
+DItemRevisionGUID=
+
+[GeneratedDocument50]
+DocumentPath=Project Outputs for DDR5_Nucleo_Shield\ODB\odb\steps\pcb\layers\top_layer\features
+DItemRevisionGUID=
+
+[GeneratedDocument51]
+DocumentPath=Project Outputs for DDR5_Nucleo_Shield\ODB\odb\steps\pcb\layers\top_overlay\features
+DItemRevisionGUID=
+
+[GeneratedDocument52]
+DocumentPath=Project Outputs for DDR5_Nucleo_Shield\ODB\odb\steps\pcb\layers\top_paste\features
+DItemRevisionGUID=
+
+[GeneratedDocument53]
+DocumentPath=Project Outputs for DDR5_Nucleo_Shield\ODB\odb\steps\pcb\layers\top_solder\features
+DItemRevisionGUID=
+
+[GeneratedDocument54]
+DocumentPath=Project Outputs for DDR5_Nucleo_Shield\AutoCAD SCH\I3C_and_I2C_Slaves.DWG
+DItemRevisionGUID=
+
+[GeneratedDocument55]
+DocumentPath=Project Outputs for DDR5_Nucleo_Shield\AutoCAD SCH\Keyboard_Buttons.DWG
+DItemRevisionGUID=
+
+[GeneratedDocument56]
+DocumentPath=Project Outputs for DDR5_Nucleo_Shield\AutoCAD SCH\Main_Page.DWG
+DItemRevisionGUID=
+
+[GeneratedDocument57]
+DocumentPath=Project Outputs for DDR5_Nucleo_Shield\ODB\odb\matrix\matrix
+DItemRevisionGUID=
+
+[GeneratedDocument58]
+DocumentPath=Project Outputs for DDR5_Nucleo_Shield\ODB\odb\steps\pcb\netlists\cadnet\netlist
+DItemRevisionGUID=
+
+[GeneratedDocument59]
+DocumentPath=Project Outputs for DDR5_Nucleo_Shield\AutoCAD SCH\Nucleo_Connector.DWG
+DItemRevisionGUID=
+
+[GeneratedDocument60]
+DocumentPath=Project Outputs for DDR5_Nucleo_Shield\AutoCAD SCH\Peripherals.DWG
+DItemRevisionGUID=
+
+[GeneratedDocument61]
+DocumentPath=Project Outputs for DDR5_Nucleo_Shield\Pick Place\Pick Place for DDR5_Nucleo_Shield_PCB.txt
+DItemRevisionGUID=
+
+[GeneratedDocument62]
+DocumentPath=Project Outputs for DDR5_Nucleo_Shield\AutoCAD SCH\Power_Supply.DWG
+DItemRevisionGUID=
+
+[GeneratedDocument63]
+DocumentPath=Project Outputs for DDR5_Nucleo_Shield\ODB\odb\steps\pcb\profile
+DItemRevisionGUID=
+
+[GeneratedDocument64]
+DocumentPath=Project Outputs for DDR5_Nucleo_Shield\ODB\odb\steps\pcb\stephdr
+DItemRevisionGUID=
+
+[GeneratedDocument65]
+DocumentPath=Project Outputs for DDR5_Nucleo_Shield\ODB\odb\steps\pcb\layers\drill\tools
+DItemRevisionGUID=
+
 [Configuration1]
 Name=Sources
 ParameterCount=0
@@ -233,6 +493,9 @@ Variant=[No Variations]
 OutputJobsCount=0
 ContentTypeGUID=CB6F2064-E317-11DF-B822-12313F0024A2
 ConfigurationType=Source
+
+[Generic_EDE]
+OutputDir=Project Outputs for DDR5_Nucleo_Shield
 
 [OutputGroup1]
 Name=Netlist Outputs

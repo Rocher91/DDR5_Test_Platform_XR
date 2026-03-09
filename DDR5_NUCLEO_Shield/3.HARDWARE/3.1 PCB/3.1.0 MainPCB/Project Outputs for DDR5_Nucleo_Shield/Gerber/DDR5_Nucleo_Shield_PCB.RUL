@@ -1,0 +1,7 @@
+DRC Rules Export File for PCB: C:\Users\xavier.rocher\Documents\Projects\DDR5_Test_Platform_XR\DDR5_NUCLEO_Shield\3.HARDWARE\3.1 PCB\3.1.0 MainPCB\DDR5_Nucleo_Shield_PCB.PcbDoc
+RuleKind=MinimumAnnularRing|RuleName=Minimum IAR <=0.45mm|Scope=Board|Minimum=6.89
+RuleKind=MinimumAnnularRing|RuleName=Minimum IAR  >0.45mm|Scope=Board|Minimum=6.89
+RuleKind=ShortCircuit|RuleName=ShortCircuit|Scope=Board|Allowed=0
+RuleKind=SolderMaskExpansion|RuleName=SolderMaskExpansion|Scope=Board|Minimum=0.00
+RuleKind=Width|RuleName=Width-xTW|Scope=Board|Minimum=5.91
+RuleKind=Clearance|RuleName=Clearance-xPP-xTP-xTT|Scope=Board|Minimum=5.91
