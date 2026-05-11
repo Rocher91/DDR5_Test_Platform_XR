@@ -359,6 +359,7 @@ HAL_StatusTypeDef I3C_LL_PrivateReadReg(uint8_t target,
     uint32_t cr_write;
     uint32_t cr_read;
     uint32_t timeout;
+    uint16_t idx = 0;
 
     volatile uint32_t evr_err;
     volatile uint32_t ser_err;
@@ -367,31 +368,26 @@ HAL_StatusTypeDef I3C_LL_PrivateReadReg(uint8_t target,
     if ((rx == NULL) || (len == 0U))
         return HAL_ERROR;
 
-    /* Asegurar private sin arbitrable header 0x7E */
     SET_BIT(hi3c1.Instance->CFGR, I3C_CFGR_NOARBH);
 
-    /* Limpiar flags previos */
     if ((READ_REG(hi3c1.Instance->EVR) & I3C_EVR_ERRF) != 0U)
         LL_I3C_ClearFlag_ERR(hi3c1.Instance);
 
     if ((READ_REG(hi3c1.Instance->EVR) & I3C_EVR_FCF) != 0U)
         LL_I3C_ClearFlag_FC(hi3c1.Instance);
 
-    /* Vaciar RX pendiente */
     while ((READ_REG(hi3c1.Instance->EVR) & I3C_EVR_RXFNEF) != 0U)
     {
         volatile uint32_t dummy = READ_REG(hi3c1.Instance->RDR);
         (void)dummy;
     }
 
-    /* WRITE: enviar registro, MEND = 0 */
     cr_write =
         (0x2UL << 27) |              /* MTYPE = private */
         ((uint32_t)target << 17) |   /* ADD[6:0] */
         (0UL << 16) |                /* RNW = 0 */
         (1UL);                       /* DCNT = 1 */
 
-    /* READ: leer len bytes, MEND = 1 */
     cr_read =
         (1UL << 31) |                /* MEND = 1 */
         (0x2UL << 27) |              /* MTYPE = private */
@@ -402,7 +398,6 @@ HAL_StatusTypeDef I3C_LL_PrivateReadReg(uint8_t target,
     WRITE_REG(hi3c1.Instance->TDR, reg);
     WRITE_REG(hi3c1.Instance->CR, cr_write);
 
-    /* Esperar siguiente control word */
     timeout = 1000000U;
     while ((READ_REG(hi3c1.Instance->EVR) & I3C_EVR_CFNFF) == 0U)
     {
@@ -421,7 +416,7 @@ HAL_StatusTypeDef I3C_LL_PrivateReadReg(uint8_t target,
 
     WRITE_REG(hi3c1.Instance->CR, cr_read);
 
-    for (uint16_t i = 0; i < len; i++)
+    while (idx < len)
     {
         timeout = 1000000U;
 
@@ -440,7 +435,11 @@ HAL_StatusTypeDef I3C_LL_PrivateReadReg(uint8_t target,
                 return HAL_TIMEOUT;
         }
 
-        rx[i] = (uint8_t)READ_REG(hi3c1.Instance->RDR);
+        while (((READ_REG(hi3c1.Instance->EVR) & I3C_EVR_RXFNEF) != 0U) &&
+               (idx < len))
+        {
+            rx[idx++] = (uint8_t)READ_REG(hi3c1.Instance->RDR);
+        }
     }
 
     timeout = 1000000U;
