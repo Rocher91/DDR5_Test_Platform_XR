@@ -40,15 +40,12 @@
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
-ADC_HandleTypeDef hadc1;
 
 I2C_HandleTypeDef hi2c1;
 
 I3C_HandleTypeDef hi3c1;
 
 UART_HandleTypeDef huart3;
-
-PCD_HandleTypeDef hpcd_USB_DRD_FS;
 
 /* USER CODE BEGIN PV */
 
@@ -57,15 +54,844 @@ PCD_HandleTypeDef hpcd_USB_DRD_FS;
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
-static void MX_ADC1_Init(void);
 static void MX_I2C1_Init(void);
 static void MX_I3C1_Init(void);
 static void MX_ICACHE_Init(void);
-static void MX_UCPD1_Init(void);
 static void MX_USART3_UART_Init(void);
-static void MX_USB_PCD_Init(void);
 static void MX_MEMORYMAP_Init(void);
 /* USER CODE BEGIN PFP */
+static void I3C_DBG(uint32_t tag);
+#define I3C_DBG_MAX 160
+
+typedef struct
+{
+    uint32_t tag;
+    uint32_t EVR;
+    uint32_t SER;
+    uint32_t SR;
+    uint32_t CFGR;
+    uint32_t CR;
+    uint32_t RDR;
+} I3C_DebugSnap;
+
+volatile I3C_DebugSnap i3c_dbg[I3C_DBG_MAX];
+volatile uint32_t i3c_dbg_i = 0;
+
+void I3C_SETAASA(void)
+{
+	I3C_XferTypeDef I3C_Context;
+	  uint32_t I3C_ControlBuffer[1];
+	  uint8_t dummyTx[1];
+
+
+	  I3C_CCCTypeDef SETAASA_Desc = {
+	    0x00,
+	    0x29,
+	    {NULL, 0},
+	    LL_I3C_DIRECTION_WRITE
+	  };
+
+	  I3C_Context.CtrlBuf.pBuffer = I3C_ControlBuffer;
+	  I3C_Context.CtrlBuf.Size = 1;
+	  I3C_Context.TxBuf.pBuffer = dummyTx;
+	  I3C_Context.TxBuf.Size = 0;
+	  I3C_Context.RxBuf.pBuffer = NULL;
+	  I3C_Context.RxBuf.Size = 0;
+
+	  if ( HAL_I3C_AddDescToFrame(&hi3c1,
+	                         &SETAASA_Desc,
+	                         NULL,
+	                         &I3C_Context,
+	                         1,
+							 I3C_BROADCAST_WITHOUT_DEFBYTE_STOP)!= HAL_OK)
+		  Error_Handler();
+
+	  if ( HAL_I3C_Ctrl_TransmitCCC(&hi3c1, &I3C_Context, HAL_MAX_DELAY)!= HAL_OK )
+	  {
+		  volatile uint32_t err = hi3c1.ErrorCode;
+		  volatile uint32_t ser = hi3c1.Instance->SER;
+		  volatile uint32_t evr = hi3c1.Instance->EVR;
+		  Error_Handler();
+	  }
+
+}
+HAL_StatusTypeDef I3C_LL_SETAASA(void)
+{
+    uint32_t cr;
+    uint32_t timeout;
+
+    /* SETAASA:
+       MTYPE = 0110 -> Broadcast CCC write
+       CCC   = 0x29
+       DCNT  = 0
+       MEND  = 1
+    */
+    cr = (1UL << 31) |      /* MEND = 1 */
+         (0x6UL << 27) |    /* MTYPE = 0110 */
+         (0x29UL << 8) |    /* CCC = SETAASA */
+         (0UL);             /* DCNT = 0 */
+
+    /* Vaciar posible RX pendiente */
+    while ((READ_REG(hi3c1.Instance->EVR) & I3C_EVR_RXFNEF) != 0U)
+    {
+        volatile uint32_t dummy = READ_REG(hi3c1.Instance->RDR);
+        (void)dummy;
+    }
+
+    while ((READ_REG(hi3c1.Instance->EVR) & I3C_EVR_RXFNEF) != 0U)
+    {
+        volatile uint32_t d0 = READ_REG(hi3c1.Instance->RDR);
+        volatile uint32_t d1 = READ_REG(hi3c1.Instance->RDWR);
+        (void)d0;
+        (void)d1;
+    }
+
+    /* Limpiar flags previos */
+    if ((READ_REG(hi3c1.Instance->EVR) & I3C_EVR_ERRF) != 0U)
+    {
+        LL_I3C_ClearFlag_ERR(hi3c1.Instance);
+    }
+
+    if ((READ_REG(hi3c1.Instance->EVR) & I3C_EVR_FCF) != 0U)
+    {
+        LL_I3C_ClearFlag_FC(hi3c1.Instance);
+    }
+
+    /* Lanzar SETAASA */
+    WRITE_REG(hi3c1.Instance->CR, cr);
+
+    /* Esperar fin o error */
+    timeout = 1000000U;
+
+    while ((READ_REG(hi3c1.Instance->EVR) & I3C_EVR_FCF) == 0U)
+    {
+        if ((READ_REG(hi3c1.Instance->EVR) & I3C_EVR_ERRF) != 0U)
+        {
+            volatile uint32_t ser = READ_REG(hi3c1.Instance->SER);
+            volatile uint32_t evr = READ_REG(hi3c1.Instance->EVR);
+            (void)ser;
+            (void)evr;
+
+            LL_I3C_ClearFlag_ERR(hi3c1.Instance);
+            return HAL_ERROR;
+        }
+
+        if (--timeout == 0U)
+        {
+            return HAL_TIMEOUT;
+        }
+    }
+
+    LL_I3C_ClearFlag_FC(hi3c1.Instance);
+
+    return HAL_OK;
+}
+
+void I3C_RSTDAA(void)
+{
+	I3C_XferTypeDef I3C_Context;
+	  uint32_t I3C_ControlBuffer[1];
+	  uint8_t dummyTx[1];
+
+
+	  I3C_CCCTypeDef SETAASA_Desc = {
+	    0x00,
+	    0x06,
+	    {NULL, 0},
+	    LL_I3C_DIRECTION_WRITE
+	  };
+
+	  I3C_Context.CtrlBuf.pBuffer = I3C_ControlBuffer;
+	  I3C_Context.CtrlBuf.Size = 1;
+	  I3C_Context.TxBuf.pBuffer = dummyTx;
+	  I3C_Context.TxBuf.Size = 0;
+	  I3C_Context.RxBuf.pBuffer = NULL;
+	  I3C_Context.RxBuf.Size = 0;
+
+	  if ( HAL_I3C_AddDescToFrame(&hi3c1,
+	                         &SETAASA_Desc,
+	                         NULL,
+	                         &I3C_Context,
+	                         1,
+							 I3C_BROADCAST_WITHOUT_DEFBYTE_STOP)!= HAL_OK)
+		  Error_Handler();
+
+	  if ( HAL_I3C_Ctrl_TransmitCCC(&hi3c1, &I3C_Context, HAL_MAX_DELAY)!= HAL_OK )
+	  {
+		  volatile uint32_t err = hi3c1.ErrorCode;
+		  volatile uint32_t ser = hi3c1.Instance->SER;
+		  volatile uint32_t evr = hi3c1.Instance->EVR;
+		  Error_Handler();
+	  }
+
+}
+
+HAL_StatusTypeDef I3C_LL_I2C_PrivateReadReg(uint8_t target,
+                                            uint8_t reg,
+                                            uint8_t *rx,
+                                            uint16_t len)
+{
+    uint32_t cr_write;
+    uint32_t cr_read;
+    uint32_t timeout = 1000000;
+
+    if ((rx == NULL) || (len == 0))
+        return HAL_ERROR;
+
+    /* MTYPE = 0100 -> legacy I2C message */
+    cr_write =
+        (0x4UL << 27) |              /* MTYPE legacy I2C */
+        ((uint32_t)target << 17) |   /* ADD[6:0] */
+        (0UL << 16) |                /* RNW = 0 write */
+        (1UL);                       /* DCNT = 1 */
+
+    cr_read =
+        (1UL << 31) |                /* MEND = 1 */
+        (0x4UL << 27) |              /* MTYPE legacy I2C */
+        ((uint32_t)target << 17) |   /* ADD[6:0] */
+        (1UL << 16) |                /* RNW = 1 read */
+        ((uint32_t)len);             /* DCNT = len */
+
+    /* Cargar byte de registro en TX-FIFO */
+    WRITE_REG(hi3c1.Instance->TDR, reg);
+
+    /* Primer mensaje: WRITE reg, MEND=0 */
+    WRITE_REG(hi3c1.Instance->CR, cr_write);
+
+
+    /* Esperar a que pida siguiente control word */
+    while ((READ_REG(hi3c1.Instance->EVR) & I3C_EVR_CFNFF) == 0U)
+    {
+        if (--timeout == 0) return HAL_TIMEOUT;
+    }
+
+    /* Segundo mensaje: READ len bytes, MEND=1 */
+    WRITE_REG(hi3c1.Instance->CR, cr_read);
+
+    for (uint16_t i = 0; i < len; i++)
+    {
+        timeout = 1000000;
+        while ((READ_REG(hi3c1.Instance->EVR) & I3C_EVR_RXFNEF) == 0U)
+        {
+            if (READ_REG(hi3c1.Instance->EVR) & I3C_EVR_ERRF)
+                return HAL_ERROR;
+
+            if (--timeout == 0) return HAL_TIMEOUT;
+        }
+
+        rx[i] = (uint8_t)READ_REG(hi3c1.Instance->RDR);
+    }
+
+    timeout = 1000000;
+    while ((READ_REG(hi3c1.Instance->EVR) & I3C_EVR_FCF) == 0U)
+    {
+        if (READ_REG(hi3c1.Instance->EVR) & I3C_EVR_ERRF)
+            return HAL_ERROR;
+
+        if (--timeout == 0) return HAL_TIMEOUT;
+    }
+
+    LL_I3C_ClearFlag_FC(hi3c1.Instance);
+
+    return HAL_OK;
+}
+
+HAL_StatusTypeDef I3C_LL_I2C_PrivateWriteReg(uint8_t target,
+                                             uint8_t reg,
+                                             const uint8_t *tx,
+                                             uint16_t len)
+{
+    uint32_t cr_write;
+    uint32_t timeout;
+
+    if ((tx == NULL) && (len > 0))
+        return HAL_ERROR;
+
+    /* MTYPE = 0100 -> legacy I2C message
+       RNW   = 0    -> write
+       DCNT  = 1 + len -> registro + datos
+       MEND  = 1    -> último mensaje
+    */
+    cr_write =
+        (1UL << 31) |                 /* MEND = 1 */
+        (0x4UL << 27) |               /* MTYPE legacy I2C */
+        ((uint32_t)target << 17) |    /* ADD[6:0] */
+        (0UL << 16) |                 /* RNW = 0 */
+        ((uint32_t)(1U + len));       /* DCNT */
+
+    /* Cargar primero el registro */
+    WRITE_REG(hi3c1.Instance->TDR, reg);
+
+    /* Cargar datos */
+    for (uint16_t i = 0; i < len; i++)
+    {
+        WRITE_REG(hi3c1.Instance->TDR, tx[i]);
+    }
+
+    /* Lanzar transferencia */
+    WRITE_REG(hi3c1.Instance->CR, cr_write);
+
+    /* Esperar fin o error */
+    timeout = 1000000;
+    while ((READ_REG(hi3c1.Instance->EVR) & I3C_EVR_FCF) == 0U)
+    {
+        if (READ_REG(hi3c1.Instance->EVR) & I3C_EVR_ERRF)
+        {
+            LL_I3C_ClearFlag_ERR(hi3c1.Instance);
+            return HAL_ERROR;
+        }
+
+        if (--timeout == 0U)
+            return HAL_TIMEOUT;
+    }
+
+    LL_I3C_ClearFlag_FC(hi3c1.Instance);
+
+    return HAL_OK;
+}
+
+
+HAL_StatusTypeDef I3C_LL_PrivateReadReg(uint8_t target,
+                                        uint8_t reg,
+                                        uint8_t *rx,
+                                        uint16_t len)
+{
+    uint32_t cr_write;
+    uint32_t cr_read;
+    uint32_t timeout;
+
+    volatile uint32_t evr_err;
+    volatile uint32_t ser_err;
+    volatile uint32_t sr_err;
+
+    if ((rx == NULL) || (len == 0U))
+        return HAL_ERROR;
+
+    /* Asegurar private sin arbitrable header 0x7E */
+    SET_BIT(hi3c1.Instance->CFGR, I3C_CFGR_NOARBH);
+
+    /* Limpiar flags previos */
+    if ((READ_REG(hi3c1.Instance->EVR) & I3C_EVR_ERRF) != 0U)
+        LL_I3C_ClearFlag_ERR(hi3c1.Instance);
+
+    if ((READ_REG(hi3c1.Instance->EVR) & I3C_EVR_FCF) != 0U)
+        LL_I3C_ClearFlag_FC(hi3c1.Instance);
+
+    /* Vaciar RX pendiente */
+    while ((READ_REG(hi3c1.Instance->EVR) & I3C_EVR_RXFNEF) != 0U)
+    {
+        volatile uint32_t dummy = READ_REG(hi3c1.Instance->RDR);
+        (void)dummy;
+    }
+
+    /* WRITE: enviar registro, MEND = 0 */
+    cr_write =
+        (0x2UL << 27) |              /* MTYPE = private */
+        ((uint32_t)target << 17) |   /* ADD[6:0] */
+        (0UL << 16) |                /* RNW = 0 */
+        (1UL);                       /* DCNT = 1 */
+
+    /* READ: leer len bytes, MEND = 1 */
+    cr_read =
+        (1UL << 31) |                /* MEND = 1 */
+        (0x2UL << 27) |              /* MTYPE = private */
+        ((uint32_t)target << 17) |   /* ADD[6:0] */
+        (1UL << 16) |                /* RNW = 1 */
+        ((uint32_t)len);             /* DCNT = len */
+
+    WRITE_REG(hi3c1.Instance->TDR, reg);
+    WRITE_REG(hi3c1.Instance->CR, cr_write);
+
+    /* Esperar siguiente control word */
+    timeout = 1000000U;
+    while ((READ_REG(hi3c1.Instance->EVR) & I3C_EVR_CFNFF) == 0U)
+    {
+        if ((READ_REG(hi3c1.Instance->EVR) & I3C_EVR_ERRF) != 0U)
+        {
+            evr_err = READ_REG(hi3c1.Instance->EVR);
+            ser_err = READ_REG(hi3c1.Instance->SER);
+            sr_err  = READ_REG(hi3c1.Instance->SR);
+            (void)evr_err; (void)ser_err; (void)sr_err;
+            return HAL_ERROR;
+        }
+
+        if (--timeout == 0U)
+            return HAL_TIMEOUT;
+    }
+
+    WRITE_REG(hi3c1.Instance->CR, cr_read);
+
+    for (uint16_t i = 0; i < len; i++)
+    {
+        timeout = 1000000U;
+
+        while ((READ_REG(hi3c1.Instance->EVR) & I3C_EVR_RXFNEF) == 0U)
+        {
+            if ((READ_REG(hi3c1.Instance->EVR) & I3C_EVR_ERRF) != 0U)
+            {
+                evr_err = READ_REG(hi3c1.Instance->EVR);
+                ser_err = READ_REG(hi3c1.Instance->SER);
+                sr_err  = READ_REG(hi3c1.Instance->SR);
+                (void)evr_err; (void)ser_err; (void)sr_err;
+                return HAL_ERROR;
+            }
+
+            if (--timeout == 0U)
+                return HAL_TIMEOUT;
+        }
+
+        rx[i] = (uint8_t)READ_REG(hi3c1.Instance->RDR);
+    }
+
+    timeout = 1000000U;
+    while ((READ_REG(hi3c1.Instance->EVR) & I3C_EVR_FCF) == 0U)
+    {
+        if ((READ_REG(hi3c1.Instance->EVR) & I3C_EVR_ERRF) != 0U)
+        {
+            evr_err = READ_REG(hi3c1.Instance->EVR);
+            ser_err = READ_REG(hi3c1.Instance->SER);
+            sr_err  = READ_REG(hi3c1.Instance->SR);
+            (void)evr_err; (void)ser_err; (void)sr_err;
+            return HAL_ERROR;
+        }
+
+        if (--timeout == 0U)
+            return HAL_TIMEOUT;
+    }
+
+    LL_I3C_ClearFlag_FC(hi3c1.Instance);
+
+    return HAL_OK;
+}
+
+HAL_StatusTypeDef I3C_LL_PrivateWriteReg(uint8_t target,
+                                         uint8_t reg,
+                                         const uint8_t *tx,
+                                         uint16_t len)
+{
+    uint32_t cr_write;
+    uint32_t timeout;
+
+    if ((tx == NULL) && (len > 0U))
+        return HAL_ERROR;
+
+    /* Asegurar private sin 0x7E inicial */
+    SET_BIT(hi3c1.Instance->CFGR, I3C_CFGR_NOARBH);
+
+    /* Limpiar flags previos */
+    if ((READ_REG(hi3c1.Instance->EVR) & I3C_EVR_ERRF) != 0U) //FLAG ERROR
+        LL_I3C_ClearFlag_ERR(hi3c1.Instance);
+
+    if ((READ_REG(hi3c1.Instance->EVR) & I3C_EVR_FCF) != 0U)	//FLAG TRAMA COMPLETADA
+        LL_I3C_ClearFlag_FC(hi3c1.Instance);
+
+    /* Vaciar RX pendiente */
+    while ((READ_REG(hi3c1.Instance->EVR) & I3C_EVR_RXFNEF) != 0U) // Hay bytes por leer en la R-FIFO
+    {
+        volatile uint32_t dummy = READ_REG(hi3c1.Instance->RDR); //Leer para descartar todo.
+        (void)dummy;
+    }
+
+    /*
+      WRITE:
+      MTYPE = 0010 I3C private
+      RNW   = 0 escritura
+      DCNT  = 1 + len  -> registro + datos
+      MEND  = 1        -> STOP al final
+    */
+    cr_write =
+        (1UL << 31) |                 /* MEND = 1 */
+        (0x2UL << 27) |               /* MTYPE = private */
+        ((uint32_t)target << 17) |    /* ADD[6:0] */
+        (0UL << 16) |                 /* RNW = 0 */
+        ((uint32_t)(1U + len));       /* DCNT */
+
+    /* Cargar primero el registro TDR para cargar en la T-FIFO */
+    WRITE_REG(hi3c1.Instance->TDR, reg);
+
+    /* Cargar datos para cargar en la T-FIFO */
+    for (uint16_t i = 0; i < len; i++)
+    {
+        WRITE_REG(hi3c1.Instance->TDR, tx[i]);
+    }
+
+    /* Lanzar transferencia */
+    WRITE_REG(hi3c1.Instance->CR, cr_write);
+
+    /* Esperar fin de frame */
+    timeout = 1000000U;
+    while ((READ_REG(hi3c1.Instance->EVR) & I3C_EVR_FCF) == 0U)
+    {
+        if ((READ_REG(hi3c1.Instance->EVR) & I3C_EVR_ERRF) != 0U) //Si hay Error
+        {
+            volatile uint32_t evr_err = READ_REG(hi3c1.Instance->EVR);
+            volatile uint32_t ser_err = READ_REG(hi3c1.Instance->SER);
+            volatile uint32_t sr_err  = READ_REG(hi3c1.Instance->SR);
+            (void)evr_err;
+            (void)ser_err;
+            (void)sr_err;
+
+            return HAL_ERROR;
+        }
+
+        if (--timeout == 0U)
+        {
+            return HAL_TIMEOUT;
+        }
+    }
+
+    LL_I3C_ClearFlag_FC(hi3c1.Instance);
+
+    return HAL_OK;
+}
+
+HAL_StatusTypeDef I3C_LL_SPD5_ReadReg(uint8_t target,
+                                      uint16_t reg,
+                                      uint8_t *rx,
+                                      uint16_t len)
+{
+    uint32_t cr_write;
+    uint32_t cr_read;
+    uint32_t timeout;
+
+    if ((rx == NULL) || (len == 0U))
+        return HAL_ERROR;
+
+    /* Registro interno: MemReg = 0 */
+    uint8_t cmd      = 0xA0;  // 1010 HID W, HID=0, W=0
+    uint8_t addr_lsb = (uint8_t)(reg & 0x3F);
+    uint8_t addr_msb = (uint8_t)((reg >> 6) & 0x0F);
+
+    /* WRITE: CMD + addr_lsb + addr_msb */
+    cr_write =
+        (0x2UL << 27) |              /* MTYPE = I3C private */
+        ((uint32_t)target << 17) |   /* ADD[6:0] */
+        (0UL << 16) |                /* RNW = 0 */
+        (3UL);                       /* DCNT = 3 */
+
+    /* READ */
+    cr_read =
+        (1UL << 31) |                /* MEND = 1 */
+        (0x2UL << 27) |              /* MTYPE = I3C private */
+        ((uint32_t)target << 17) |   /* ADD[6:0] */
+        (1UL << 16) |                /* RNW = 1 */
+        ((uint32_t)len);             /* DCNT = len */
+
+    /* limpiar flags previos */
+    if (READ_REG(hi3c1.Instance->EVR) & I3C_EVR_ERRF)
+        LL_I3C_ClearFlag_ERR(hi3c1.Instance);
+
+    if (READ_REG(hi3c1.Instance->EVR) & I3C_EVR_FCF)
+        LL_I3C_ClearFlag_FC(hi3c1.Instance);
+
+    while (READ_REG(hi3c1.Instance->EVR) & I3C_EVR_RXFNEF)
+    {
+        volatile uint32_t dummy = READ_REG(hi3c1.Instance->RDR);
+        (void)dummy;
+    }
+
+    /* cargar payload de comando */
+    WRITE_REG(hi3c1.Instance->TDR, cmd);
+    I3C_DBG_Snapshot(); // A: TX cargado
+
+    WRITE_REG(hi3c1.Instance->TDR, addr_lsb);
+    WRITE_REG(hi3c1.Instance->TDR, addr_msb);
+
+    /* WRITE + repeated START */
+    WRITE_REG(hi3c1.Instance->CR, cr_write);
+
+    timeout = 1000000U;
+    while ((READ_REG(hi3c1.Instance->EVR) & I3C_EVR_CFNFF) == 0U)
+    {
+        if (READ_REG(hi3c1.Instance->EVR) & I3C_EVR_ERRF)
+            return HAL_ERROR;
+
+        if (--timeout == 0U)
+            return HAL_TIMEOUT;
+    }
+
+    /* READ + STOP */
+    WRITE_REG(hi3c1.Instance->CR, cr_read);
+
+    for (uint16_t i = 0; i < len; i++)
+    {
+        timeout = 1000000U;
+        while ((READ_REG(hi3c1.Instance->EVR) & I3C_EVR_RXFNEF) == 0U)
+        {
+            if (READ_REG(hi3c1.Instance->EVR) & I3C_EVR_ERRF)
+                return HAL_ERROR;
+
+            if (--timeout == 0U)
+                return HAL_TIMEOUT;
+        }
+
+        rx[i] = (uint8_t)READ_REG(hi3c1.Instance->RDR);
+    }
+
+    timeout = 1000000U;
+    while ((READ_REG(hi3c1.Instance->EVR) & I3C_EVR_FCF) == 0U)
+    {
+        if (READ_REG(hi3c1.Instance->EVR) & I3C_EVR_ERRF)
+            return HAL_ERROR;
+
+        if (--timeout == 0U)
+            return HAL_TIMEOUT;
+    }
+
+    LL_I3C_ClearFlag_FC(hi3c1.Instance);
+
+    return HAL_OK;
+}
+
+HAL_StatusTypeDef I3C_LL_PrivateReadReg_Debug(uint8_t target,
+                                              uint8_t reg,
+                                              uint8_t *rx,
+                                              uint16_t len)
+{
+    uint32_t cr_write;
+    uint32_t cr_read;
+    uint32_t timeout;
+
+    volatile uint32_t evr_err;
+    volatile uint32_t ser_err;
+    volatile uint32_t sr_err;
+
+    I3C_DBG(100);   // entrada
+
+    if ((rx == NULL) || (len == 0U))
+    {
+        I3C_DBG(900);
+        return HAL_ERROR;
+    }
+
+    SET_BIT(hi3c1.Instance->CFGR, I3C_CFGR_NOARBH);
+    I3C_DBG(101);   // NOARBH configurado
+
+    if ((READ_REG(hi3c1.Instance->EVR) & I3C_EVR_ERRF) != 0U)
+        LL_I3C_ClearFlag_ERR(hi3c1.Instance);
+
+    if ((READ_REG(hi3c1.Instance->EVR) & I3C_EVR_FCF) != 0U)
+        LL_I3C_ClearFlag_FC(hi3c1.Instance);
+
+    while ((READ_REG(hi3c1.Instance->EVR) & I3C_EVR_RXFNEF) != 0U)
+    {
+        volatile uint32_t dummy = READ_REG(hi3c1.Instance->RDR);
+        (void)dummy;
+    }
+
+    I3C_DBG(102);
+
+    cr_write =
+        (0x2UL << 27) |
+        ((uint32_t)target << 17) |
+        (0UL << 16) |
+        (1UL);
+
+    cr_read =
+        (1UL << 31) |
+        (0x2UL << 27) |
+        ((uint32_t)target << 17) |
+        (1UL << 16) |
+        ((uint32_t)len);
+
+    I3C_DBG(103);
+
+    WRITE_REG(hi3c1.Instance->TDR, reg);
+    I3C_DBG(104);
+
+    WRITE_REG(hi3c1.Instance->CR, cr_write);
+    I3C_DBG(105);
+
+    timeout = 1000000U;
+    while ((READ_REG(hi3c1.Instance->EVR) & I3C_EVR_CFNFF) == 0U)
+    {
+        if ((READ_REG(hi3c1.Instance->EVR) & I3C_EVR_ERRF) != 0U)
+        {
+            I3C_DBG(910);
+
+            evr_err = READ_REG(hi3c1.Instance->EVR);
+            ser_err = READ_REG(hi3c1.Instance->SER);
+            sr_err  = READ_REG(hi3c1.Instance->SR);
+            (void)evr_err; (void)ser_err; (void)sr_err;
+
+            __NOP();
+            return HAL_ERROR;
+        }
+
+        if (--timeout == 0U)
+        {
+            I3C_DBG(911);
+
+            evr_err = READ_REG(hi3c1.Instance->EVR);
+            ser_err = READ_REG(hi3c1.Instance->SER);
+            sr_err  = READ_REG(hi3c1.Instance->SR);
+            (void)evr_err; (void)ser_err; (void)sr_err;
+
+            __NOP();
+            return HAL_TIMEOUT;
+        }
+    }
+
+    I3C_DBG(106);
+
+    WRITE_REG(hi3c1.Instance->CR, cr_read);
+    I3C_DBG(107);
+
+    for (uint16_t i = 0; i < len; i++)
+    {
+        timeout = 1000000U;
+
+        while ((READ_REG(hi3c1.Instance->EVR) & I3C_EVR_RXFNEF) == 0U)
+        {
+            if ((READ_REG(hi3c1.Instance->EVR) & I3C_EVR_ERRF) != 0U)
+            {
+                I3C_DBG(920);
+
+                evr_err = READ_REG(hi3c1.Instance->EVR);
+                ser_err = READ_REG(hi3c1.Instance->SER);
+                sr_err  = READ_REG(hi3c1.Instance->SR);
+                (void)evr_err; (void)ser_err; (void)sr_err;
+
+                __NOP();
+                return HAL_ERROR;
+            }
+
+            if (--timeout == 0U)
+            {
+                I3C_DBG(921);
+
+                evr_err = READ_REG(hi3c1.Instance->EVR);
+                ser_err = READ_REG(hi3c1.Instance->SER);
+                sr_err  = READ_REG(hi3c1.Instance->SR);
+                (void)evr_err; (void)ser_err; (void)sr_err;
+
+                __NOP();
+                return HAL_TIMEOUT;
+            }
+        }
+
+        I3C_DBG(108);
+
+        rx[i] = (uint8_t)READ_REG(hi3c1.Instance->RDR);
+
+        I3C_DBG(109);
+    }
+
+    timeout = 1000000U;
+    while ((READ_REG(hi3c1.Instance->EVR) & I3C_EVR_FCF) == 0U)
+    {
+        if ((READ_REG(hi3c1.Instance->EVR) & I3C_EVR_ERRF) != 0U)
+        {
+            I3C_DBG(930);
+
+            evr_err = READ_REG(hi3c1.Instance->EVR);
+            ser_err = READ_REG(hi3c1.Instance->SER);
+            sr_err  = READ_REG(hi3c1.Instance->SR);
+            (void)evr_err; (void)ser_err; (void)sr_err;
+
+            __NOP();
+            return HAL_ERROR;
+        }
+
+        if (--timeout == 0U)
+        {
+            I3C_DBG(931);
+
+            evr_err = READ_REG(hi3c1.Instance->EVR);
+            ser_err = READ_REG(hi3c1.Instance->SER);
+            sr_err  = READ_REG(hi3c1.Instance->SR);
+            (void)evr_err; (void)ser_err; (void)sr_err;
+
+            __NOP();
+            return HAL_TIMEOUT;
+        }
+    }
+
+    I3C_DBG(110);
+
+    LL_I3C_ClearFlag_FC(hi3c1.Instance);
+
+    I3C_DBG(111);
+
+    volatile uint32_t evr_final = hi3c1.Instance->EVR;
+    volatile uint32_t ser_final = hi3c1.Instance->SER;
+    volatile uint32_t sr_final  = hi3c1.Instance->SR;
+    volatile uint8_t  rx_final  = rx[0];
+
+    __NOP();   // breakpoint aquí
+
+    return HAL_OK;
+}
+
+HAL_StatusTypeDef I3C_HAL_PrivateReadReg(uint8_t target,
+                                         uint8_t reg,
+                                         uint8_t *rx,
+                                         uint16_t len)
+{
+    I3C_XferTypeDef xfer = {0};
+    I3C_PrivateTypeDef desc[2] = {0};
+
+    uint32_t ctrl[2];
+    uint8_t txGlobal[1];
+
+    if ((rx == NULL) || (len == 0U))
+        return HAL_ERROR;
+
+    /* Mensaje 1: WRITE registro */
+    desc[0].TargetAddr    = target;
+    desc[0].Direction     = HAL_I3C_DIRECTION_WRITE;
+    desc[0].TxBuf.pBuffer = &reg;
+    desc[0].TxBuf.Size    = 1;
+
+    /* Mensaje 2: READ datos */
+    desc[1].TargetAddr    = target;
+    desc[1].Direction     = HAL_I3C_DIRECTION_READ;
+    desc[1].RxBuf.pBuffer = rx;
+    desc[1].RxBuf.Size    = len;
+
+    xfer.CtrlBuf.pBuffer = ctrl;
+    xfer.CtrlBuf.Size    = 2;
+
+    xfer.TxBuf.pBuffer   = txGlobal;
+    xfer.TxBuf.Size      = 1;
+
+    xfer.RxBuf.pBuffer   = rx;
+    xfer.RxBuf.Size      = len;
+
+    SET_BIT(hi3c1.Instance->CFGR, I3C_CFGR_NOARBH);
+
+    if (HAL_I3C_AddDescToFrame(&hi3c1,
+                               NULL,
+                               desc,
+                               &xfer,
+                               2,
+                               I3C_PRIVATE_WITHOUT_ARB_RESTART) != HAL_OK)
+    {
+        return HAL_ERROR;
+    }
+
+    if (HAL_I3C_Ctrl_Receive(&hi3c1, &xfer, HAL_MAX_DELAY) != HAL_OK)
+    {
+        return HAL_ERROR;
+    }
+
+    return HAL_OK;
+}
+
+static void I3C_DBG(uint32_t tag)
+{
+    if (i3c_dbg_i < I3C_DBG_MAX)
+    {
+        i3c_dbg[i3c_dbg_i].tag  = tag;
+        i3c_dbg[i3c_dbg_i].EVR  = hi3c1.Instance->EVR;
+        i3c_dbg[i3c_dbg_i].SER  = hi3c1.Instance->SER;
+        i3c_dbg[i3c_dbg_i].SR   = hi3c1.Instance->SR;
+        i3c_dbg[i3c_dbg_i].CFGR = hi3c1.Instance->CFGR;
+        i3c_dbg[i3c_dbg_i].CR   = hi3c1.Instance->CR;
+        i3c_dbg[i3c_dbg_i].RDR  = hi3c1.Instance->RDR;
+        i3c_dbg_i++;
+    }
+}
 
 /* USER CODE END PFP */
 
@@ -102,16 +928,95 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
-  MX_ADC1_Init();
   MX_I2C1_Init();
   MX_I3C1_Init();
   MX_ICACHE_Init();
-  MX_UCPD1_Init();
   MX_USART3_UART_Init();
-  MX_USB_PCD_Init();
   MX_MEMORYMAP_Init();
   /* USER CODE BEGIN 2 */
 
+  uint8_t value[10] = {0};
+
+  i3c_dbg_i = 0;
+
+  /* Estado tras init */
+  I3C_DBG(1);
+
+  /* ------------------------------------------------ */
+  /* I2C legacy read antes de SETAASA                 */
+  /* ------------------------------------------------ */
+
+  I3C_DBG(2);
+
+  if (I3C_LL_I2C_PrivateReadReg(0x50, 0x00, value, 1) != HAL_OK)
+  {
+      I3C_DBG(50);   // error I2C inicial
+      __NOP();
+      Error_Handler();
+  }
+
+  I3C_DBG(3);   // I2C inicial OK
+
+  /* ------------------------------------------------ */
+  /* SETAASA -> entrar en I3C Basic                   */
+  /* ------------------------------------------------ */
+
+  I3C_DBG(4);
+
+  I3C_SETAASA();
+
+
+  I3C_DBG(5);   // SETAASA enviado
+
+  HAL_Delay(10);
+
+
+  I3C_DBG(6);   // delay post SETAASA
+
+  /* ------------------------------------------------ */
+  /* I3C private read                                 */
+  /* ------------------------------------------------ */
+
+  I3C_DBG(7);
+
+
+  if (I3C_LL_PrivateReadReg(0x50, 0x00, &value, 1) != HAL_OK)
+  {
+      Error_Handler();
+  }
+
+  I3C_DBG(8);   // private read OK
+
+  /* ------------------------------------------------ */
+  /* RSTDAA -> volver a I2C                           */
+  /* ------------------------------------------------ */
+
+  I3C_DBG(9);
+
+  I3C_RSTDAA();
+
+  I3C_DBG(10);  // RSTDAA enviado
+
+  HAL_Delay(100);
+
+  I3C_DBG(11);  // delay post RSTDAA
+
+  /* ------------------------------------------------ */
+  /* I2C legacy read después de RSTDAA                */
+  /* ------------------------------------------------ */
+
+  I3C_DBG(12);
+
+  if (I3C_LL_I2C_PrivateReadReg(0x50, 0x00, value, 1) != HAL_OK)
+  {
+      I3C_DBG(70);   // error I2C final
+      __NOP();
+      Error_Handler();
+  }
+
+  I3C_DBG(13);  // I2C final OK
+
+  __NOP();
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -143,11 +1048,10 @@ void SystemClock_Config(void)
   /** Initializes the RCC Oscillators according to the specified parameters
   * in the RCC_OscInitTypeDef structure.
   */
-  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI48|RCC_OSCILLATORTYPE_HSI;
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
   RCC_OscInitStruct.HSIState = RCC_HSI_ON;
   RCC_OscInitStruct.HSIDiv = RCC_HSI_DIV1;
   RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
-  RCC_OscInitStruct.HSI48State = RCC_HSI48_ON;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
   RCC_OscInitStruct.PLL.PLLSource = RCC_PLL1_SOURCE_HSI;
   RCC_OscInitStruct.PLL.PLLM = 4;
@@ -178,65 +1082,6 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
-}
-
-/**
-  * @brief ADC1 Initialization Function
-  * @param None
-  * @retval None
-  */
-static void MX_ADC1_Init(void)
-{
-
-  /* USER CODE BEGIN ADC1_Init 0 */
-
-  /* USER CODE END ADC1_Init 0 */
-
-  ADC_ChannelConfTypeDef sConfig = {0};
-
-  /* USER CODE BEGIN ADC1_Init 1 */
-
-  /* USER CODE END ADC1_Init 1 */
-
-  /** Common config
-  */
-  hadc1.Instance = ADC1;
-  hadc1.Init.ClockPrescaler = ADC_CLOCK_ASYNC_DIV1;
-  hadc1.Init.Resolution = ADC_RESOLUTION_12B;
-  hadc1.Init.DataAlign = ADC_DATAALIGN_RIGHT;
-  hadc1.Init.ScanConvMode = ADC_SCAN_DISABLE;
-  hadc1.Init.EOCSelection = ADC_EOC_SINGLE_CONV;
-  hadc1.Init.LowPowerAutoWait = DISABLE;
-  hadc1.Init.ContinuousConvMode = DISABLE;
-  hadc1.Init.NbrOfConversion = 1;
-  hadc1.Init.DiscontinuousConvMode = DISABLE;
-  hadc1.Init.ExternalTrigConv = ADC_SOFTWARE_START;
-  hadc1.Init.ExternalTrigConvEdge = ADC_EXTERNALTRIGCONVEDGE_NONE;
-  hadc1.Init.DMAContinuousRequests = DISABLE;
-  hadc1.Init.SamplingMode = ADC_SAMPLING_MODE_NORMAL;
-  hadc1.Init.Overrun = ADC_OVR_DATA_PRESERVED;
-  hadc1.Init.OversamplingMode = DISABLE;
-  if (HAL_ADC_Init(&hadc1) != HAL_OK)
-  {
-    Error_Handler();
-  }
-
-  /** Configure Regular Channel
-  */
-  sConfig.Channel = ADC_CHANNEL_18;
-  sConfig.Rank = ADC_REGULAR_RANK_1;
-  sConfig.SamplingTime = ADC_SAMPLETIME_2CYCLES_5;
-  sConfig.SingleDiff = ADC_SINGLE_ENDED;
-  sConfig.OffsetNumber = ADC_OFFSET_NONE;
-  sConfig.Offset = 0;
-  if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /* USER CODE BEGIN ADC1_Init 2 */
-
-  /* USER CODE END ADC1_Init 2 */
-
 }
 
 /**
@@ -309,12 +1154,24 @@ static void MX_I3C1_Init(void)
   hi3c1.Mode = HAL_I3C_MODE_CONTROLLER;
   hi3c1.Init.CtrlBusCharacteristic.SDAHoldTime = HAL_I3C_SDA_HOLD_TIME_0_5;
   hi3c1.Init.CtrlBusCharacteristic.WaitTime = HAL_I3C_OWN_ACTIVITY_STATE_0;
-  hi3c1.Init.CtrlBusCharacteristic.SCLPPLowDuration = 0x04;
-  hi3c1.Init.CtrlBusCharacteristic.SCLI3CHighDuration = 0x04;
-  hi3c1.Init.CtrlBusCharacteristic.SCLODLowDuration = 0x2e;
-  hi3c1.Init.CtrlBusCharacteristic.SCLI2CHighDuration = 0x00;
-  hi3c1.Init.CtrlBusCharacteristic.BusFreeDuration = 0x1a;
-  hi3c1.Init.CtrlBusCharacteristic.BusIdleDuration = 0x7e;
+  //hi3c1.Init.CtrlBusCharacteristic.SCLPPLowDuration = 0x4c;
+  //hi3c1.Init.CtrlBusCharacteristic.SCLI3CHighDuration = 0x02;
+  //hi3c1.Init.CtrlBusCharacteristic.SCLODLowDuration = 0x67;
+  //hi3c1.Init.CtrlBusCharacteristic.SCLI2CHighDuration = 0x5f;
+  hi3c1.Init.CtrlBusCharacteristic.BusFreeDuration = 0x42;
+  hi3c1.Init.CtrlBusCharacteristic.BusIdleDuration = 0x4e;
+
+  //I2c & I3C 500Khz
+  //hi3c1.Init.CtrlBusCharacteristic.SCLI3CHighDuration = 0x27;  // ~500 ns
+  //hi3c1.Init.CtrlBusCharacteristic.SCLODLowDuration   = 0x67;  // ~1300 ns
+  //hi3c1.Init.CtrlBusCharacteristic.SCLI2CHighDuration = 0x27;  // ~500 ns o más
+  //hi3c1.Init.CtrlBusCharacteristic.SCLPPLowDuration   = 0x67;  // conservador
+
+  hi3c1.Init.CtrlBusCharacteristic.SCLI3CHighDuration = 0x27;  // I3C high ~500 ns
+  hi3c1.Init.CtrlBusCharacteristic.SCLODLowDuration   = 0x63;  // I2C low  ~1250 ns
+  hi3c1.Init.CtrlBusCharacteristic.SCLI2CHighDuration = 0x63;  // I2C high ~1250 ns
+  hi3c1.Init.CtrlBusCharacteristic.SCLPPLowDuration   = 0x27;  // I3C low  ~500 ns
+
   if (HAL_I3C_Init(&hi3c1) != HAL_OK)
   {
     Error_Handler();
@@ -340,13 +1197,13 @@ static void MX_I3C1_Init(void)
   sCtrlConfig.CCCStallState = DISABLE;
   sCtrlConfig.TxStallState = DISABLE;
   sCtrlConfig.RxStallState = DISABLE;
-  sCtrlConfig.HighKeeperSDA = DISABLE;
+  sCtrlConfig.HighKeeperSDA = ENABLE;
   if (HAL_I3C_Ctrl_Config(&hi3c1, &sCtrlConfig) != HAL_OK)
   {
     Error_Handler();
   }
   /* USER CODE BEGIN I3C1_Init 2 */
-
+  SET_BIT(hi3c1.Instance->CFGR, I3C_CFGR_NOARBH);
   /* USER CODE END I3C1_Init 2 */
 
 }
@@ -401,42 +1258,6 @@ static void MX_MEMORYMAP_Init(void)
 }
 
 /**
-  * @brief UCPD1 Initialization Function
-  * @param None
-  * @retval None
-  */
-static void MX_UCPD1_Init(void)
-{
-
-  /* USER CODE BEGIN UCPD1_Init 0 */
-
-  /* USER CODE END UCPD1_Init 0 */
-
-  LL_GPIO_InitTypeDef GPIO_InitStruct = {0};
-
-  /* Peripheral clock enable */
-  LL_APB1_GRP2_EnableClock(LL_APB1_GRP2_PERIPH_UCPD1);
-
-  LL_AHB2_GRP1_EnableClock(LL_AHB2_GRP1_PERIPH_GPIOB);
-  /**UCPD1 GPIO Configuration
-  PB13   ------> UCPD1_CC1
-  PB14   ------> UCPD1_CC2
-  */
-  GPIO_InitStruct.Pin = LL_GPIO_PIN_13|LL_GPIO_PIN_14;
-  GPIO_InitStruct.Mode = LL_GPIO_MODE_ANALOG;
-  GPIO_InitStruct.Pull = LL_GPIO_PULL_NO;
-  LL_GPIO_Init(GPIOB, &GPIO_InitStruct);
-
-  /* USER CODE BEGIN UCPD1_Init 1 */
-
-  /* USER CODE END UCPD1_Init 1 */
-  /* USER CODE BEGIN UCPD1_Init 2 */
-
-  /* USER CODE END UCPD1_Init 2 */
-
-}
-
-/**
   * @brief USART3 Initialization Function
   * @param None
   * @retval None
@@ -482,42 +1303,6 @@ static void MX_USART3_UART_Init(void)
   /* USER CODE BEGIN USART3_Init 2 */
 
   /* USER CODE END USART3_Init 2 */
-
-}
-
-/**
-  * @brief USB Initialization Function
-  * @param None
-  * @retval None
-  */
-static void MX_USB_PCD_Init(void)
-{
-
-  /* USER CODE BEGIN USB_Init 0 */
-
-  /* USER CODE END USB_Init 0 */
-
-  /* USER CODE BEGIN USB_Init 1 */
-
-  /* USER CODE END USB_Init 1 */
-  hpcd_USB_DRD_FS.Instance = USB_DRD_FS;
-  hpcd_USB_DRD_FS.Init.dev_endpoints = 8;
-  hpcd_USB_DRD_FS.Init.speed = USBD_FS_SPEED;
-  hpcd_USB_DRD_FS.Init.phy_itface = PCD_PHY_EMBEDDED;
-  hpcd_USB_DRD_FS.Init.Sof_enable = DISABLE;
-  hpcd_USB_DRD_FS.Init.low_power_enable = DISABLE;
-  hpcd_USB_DRD_FS.Init.lpm_enable = DISABLE;
-  hpcd_USB_DRD_FS.Init.battery_charging_enable = DISABLE;
-  hpcd_USB_DRD_FS.Init.vbus_sensing_enable = DISABLE;
-  hpcd_USB_DRD_FS.Init.bulk_doublebuffer_enable = DISABLE;
-  hpcd_USB_DRD_FS.Init.iso_singlebuffer_enable = DISABLE;
-  if (HAL_PCD_Init(&hpcd_USB_DRD_FS) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /* USER CODE BEGIN USB_Init 2 */
-
-  /* USER CODE END USB_Init 2 */
 
 }
 
@@ -577,6 +1362,12 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOF, &GPIO_InitStruct);
 
+  /*Configure GPIO pin : VBUS_SENSE_Pin */
+  GPIO_InitStruct.Pin = VBUS_SENSE_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(VBUS_SENSE_GPIO_Port, &GPIO_InitStruct);
+
   /*Configure GPIO pins : LED1_GREEN_Pin TRIGGER_OUT_Pin */
   GPIO_InitStruct.Pin = LED1_GREEN_Pin|TRIGGER_OUT_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
@@ -597,6 +1388,12 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOE, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : UCPD_CC1_Pin UCPD_CC2_Pin */
+  GPIO_InitStruct.Pin = UCPD_CC1_Pin|UCPD_CC2_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
   /*Configure GPIO pin : LED3_RED_Pin */
   GPIO_InitStruct.Pin = LED3_RED_Pin;
@@ -619,6 +1416,14 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : USB_FS_N_Pin USB_FS_P_Pin */
+  GPIO_InitStruct.Pin = USB_FS_N_Pin|USB_FS_P_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  GPIO_InitStruct.Alternate = GPIO_AF10_USB;
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
   /*Configure GPIO pins : PWR_EN_RDIMM_0_Pin PWR_EN_RDIMM_1_Pin PWR_EN_RDIMM_2_Pin PWR_EN_RDIMM_3_Pin
                            PWR_EN_RDIMM_4_Pin PWR_EN_RDIMM_5_Pin */
