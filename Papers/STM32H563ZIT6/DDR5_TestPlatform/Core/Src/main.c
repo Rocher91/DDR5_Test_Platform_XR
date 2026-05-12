@@ -351,118 +351,6 @@ HAL_StatusTypeDef I3C_LL_I2C_PrivateWriteReg(uint8_t target,
 }
 
 
-HAL_StatusTypeDef I3C_LL_PrivateReadReg(uint8_t target,
-                                        uint8_t reg,
-                                        uint8_t *rx,
-                                        uint16_t len)
-{
-    uint32_t cr_write;
-    uint32_t cr_read;
-    uint32_t timeout;
-    uint16_t idx = 0;
-
-    volatile uint32_t evr_err;
-    volatile uint32_t ser_err;
-    volatile uint32_t sr_err;
-
-    if ((rx == NULL) || (len == 0U))
-        return HAL_ERROR;
-
-    SET_BIT(hi3c1.Instance->CFGR, I3C_CFGR_NOARBH);
-
-    if ((READ_REG(hi3c1.Instance->EVR) & I3C_EVR_ERRF) != 0U)
-        LL_I3C_ClearFlag_ERR(hi3c1.Instance);
-
-    if ((READ_REG(hi3c1.Instance->EVR) & I3C_EVR_FCF) != 0U)
-        LL_I3C_ClearFlag_FC(hi3c1.Instance);
-
-    while ((READ_REG(hi3c1.Instance->EVR) & I3C_EVR_RXFNEF) != 0U)
-    {
-        volatile uint32_t dummy = READ_REG(hi3c1.Instance->RDR);
-        (void)dummy;
-    }
-
-    cr_write =
-        (0x2UL << 27) |              /* MTYPE = private */
-        ((uint32_t)target << 17) |   /* ADD[6:0] */
-        (0UL << 16) |                /* RNW = 0 */
-        (1UL);                       /* DCNT = 1 */
-
-    cr_read =
-        (1UL << 31) |                /* MEND = 1 */
-        (0x2UL << 27) |              /* MTYPE = private */
-        ((uint32_t)target << 17) |   /* ADD[6:0] */
-        (1UL << 16) |                /* RNW = 1 */
-        ((uint32_t)len);             /* DCNT = len */
-
-    WRITE_REG(hi3c1.Instance->TDR, reg);
-    WRITE_REG(hi3c1.Instance->CR, cr_write);
-
-    timeout = 1000000U;
-    while ((READ_REG(hi3c1.Instance->EVR) & I3C_EVR_CFNFF) == 0U)
-    {
-        if ((READ_REG(hi3c1.Instance->EVR) & I3C_EVR_ERRF) != 0U)
-        {
-            evr_err = READ_REG(hi3c1.Instance->EVR);
-            ser_err = READ_REG(hi3c1.Instance->SER);
-            sr_err  = READ_REG(hi3c1.Instance->SR);
-            (void)evr_err; (void)ser_err; (void)sr_err;
-            return HAL_ERROR;
-        }
-
-        if (--timeout == 0U)
-            return HAL_TIMEOUT;
-    }
-
-    WRITE_REG(hi3c1.Instance->CR, cr_read);
-
-    while (idx < len)
-    {
-        timeout = 1000000U;
-
-        while ((READ_REG(hi3c1.Instance->EVR) & I3C_EVR_RXFNEF) == 0U)
-        {
-            if ((READ_REG(hi3c1.Instance->EVR) & I3C_EVR_ERRF) != 0U)
-            {
-                evr_err = READ_REG(hi3c1.Instance->EVR);
-                ser_err = READ_REG(hi3c1.Instance->SER);
-                sr_err  = READ_REG(hi3c1.Instance->SR);
-                (void)evr_err; (void)ser_err; (void)sr_err;
-                return HAL_ERROR;
-            }
-
-            if (--timeout == 0U)
-                return HAL_TIMEOUT;
-        }
-
-        while (((READ_REG(hi3c1.Instance->EVR) & I3C_EVR_RXFNEF) != 0U) &&
-               (idx < len))
-        {
-            rx[idx++] = (uint8_t)READ_REG(hi3c1.Instance->RDR);
-        }
-    }
-
-    timeout = 1000000U;
-    while ((READ_REG(hi3c1.Instance->EVR) & I3C_EVR_FCF) == 0U)
-    {
-        if ((READ_REG(hi3c1.Instance->EVR) & I3C_EVR_ERRF) != 0U)
-        {
-            evr_err = READ_REG(hi3c1.Instance->EVR);
-            ser_err = READ_REG(hi3c1.Instance->SER);
-            sr_err  = READ_REG(hi3c1.Instance->SR);
-            (void)evr_err; (void)ser_err; (void)sr_err;
-            return HAL_ERROR;
-        }
-
-        if (--timeout == 0U)
-            return HAL_TIMEOUT;
-    }
-
-    LL_I3C_ClearFlag_FC(hi3c1.Instance);
-
-    return HAL_OK;
-}
-
 HAL_StatusTypeDef I3C_LL_PrivateWriteReg(uint8_t target,
                                          uint8_t reg,
                                          const uint8_t *tx,
@@ -873,6 +761,163 @@ HAL_StatusTypeDef I3C_HAL_PrivateReadReg(uint8_t target,
     {
         return HAL_ERROR;
     }
+
+    return HAL_OK;
+}
+
+HAL_StatusTypeDef I3C_LL_PrivateReadReg(uint8_t target,
+                                        uint8_t reg,
+                                        uint8_t *rx,
+                                        uint16_t len)
+{
+    uint32_t cr_write;
+    uint32_t cr_read;
+    uint32_t timeout;
+    uint16_t idx = 0;
+
+    volatile uint32_t evr_err;
+    volatile uint32_t ser_err;
+    volatile uint32_t sr_err;
+
+    if ((rx == NULL) || (len == 0U))
+        return HAL_ERROR;
+
+    SET_BIT(hi3c1.Instance->CFGR, I3C_CFGR_NOARBH);
+
+    if ((READ_REG(hi3c1.Instance->EVR) & I3C_EVR_ERRF) != 0U)
+        LL_I3C_ClearFlag_ERR(hi3c1.Instance);
+
+    if ((READ_REG(hi3c1.Instance->EVR) & I3C_EVR_FCF) != 0U)
+        LL_I3C_ClearFlag_FC(hi3c1.Instance);
+
+    while ((READ_REG(hi3c1.Instance->EVR) & I3C_EVR_RXFNEF) != 0U)
+    {
+        volatile uint32_t dummy = READ_REG(hi3c1.Instance->RDR);
+        (void)dummy;
+    }
+
+    /*
+      WRITE PHASE:
+      reg + dummy byte
+    */
+    cr_write =
+        (0x2UL << 27) |              /* MTYPE = private */
+        ((uint32_t)target << 17) |   /* ADD[6:0] */
+        (0UL << 16) |                /* RNW = 0 */
+        (2UL);                       /* DCNT = 2 */
+
+    /*
+      READ PHASE
+    */
+    cr_read =
+        (1UL << 31) |                /* MEND = 1 */
+        (0x2UL << 27) |              /* MTYPE = private */
+        ((uint32_t)target << 17) |   /* ADD[6:0] */
+        (1UL << 16) |                /* RNW = 1 */
+        ((uint32_t)len);             /* DCNT = len */
+
+    /*
+      TX FIFO:
+      [reg][dummy]
+    */
+    WRITE_REG(hi3c1.Instance->TDR, reg);
+    WRITE_REG(hi3c1.Instance->TDR, 0x00);
+
+    /*
+      START WRITE
+    */
+    WRITE_REG(hi3c1.Instance->CR, cr_write);
+
+    /*
+      Esperar espacio en C-FIFO
+    */
+    timeout = 1000000U;
+
+    while ((READ_REG(hi3c1.Instance->EVR) & I3C_EVR_CFNFF) == 0U)
+    {
+        if ((READ_REG(hi3c1.Instance->EVR) & I3C_EVR_ERRF) != 0U)
+        {
+            evr_err = READ_REG(hi3c1.Instance->EVR);
+            ser_err = READ_REG(hi3c1.Instance->SER);
+            sr_err  = READ_REG(hi3c1.Instance->SR);
+
+            (void)evr_err;
+            (void)ser_err;
+            (void)sr_err;
+
+            return HAL_ERROR;
+        }
+
+        if (--timeout == 0U)
+            return HAL_TIMEOUT;
+    }
+
+    /*
+      REPEATED START + READ
+    */
+    WRITE_REG(hi3c1.Instance->CR, cr_read);
+
+    /*
+      RX LOOP
+    */
+    while (idx < len)
+    {
+        timeout = 1000000U;
+
+        while ((READ_REG(hi3c1.Instance->EVR) & I3C_EVR_RXFNEF) == 0U)
+        {
+            if ((READ_REG(hi3c1.Instance->EVR) & I3C_EVR_ERRF) != 0U)
+            {
+                evr_err = READ_REG(hi3c1.Instance->EVR);
+                ser_err = READ_REG(hi3c1.Instance->SER);
+                sr_err  = READ_REG(hi3c1.Instance->SR);
+
+                (void)evr_err;
+                (void)ser_err;
+                (void)sr_err;
+
+                return HAL_ERROR;
+            }
+
+            if (--timeout == 0U)
+                return HAL_TIMEOUT;
+        }
+
+        /*
+          Vaciar RX FIFO
+        */
+        while (((READ_REG(hi3c1.Instance->EVR) & I3C_EVR_RXFNEF) != 0U) &&
+               (idx < len))
+        {
+            rx[idx++] = (uint8_t)READ_REG(hi3c1.Instance->RDR);
+        }
+    }
+
+    /*
+      Esperar fin de frame
+    */
+    timeout = 1000000U;
+
+    while ((READ_REG(hi3c1.Instance->EVR) & I3C_EVR_FCF) == 0U)
+    {
+        if ((READ_REG(hi3c1.Instance->EVR) & I3C_EVR_ERRF) != 0U)
+        {
+            evr_err = READ_REG(hi3c1.Instance->EVR);
+            ser_err = READ_REG(hi3c1.Instance->SER);
+            sr_err  = READ_REG(hi3c1.Instance->SR);
+
+            (void)evr_err;
+            (void)ser_err;
+            (void)sr_err;
+
+            return HAL_ERROR;
+        }
+
+        if (--timeout == 0U)
+            return HAL_TIMEOUT;
+    }
+
+    LL_I3C_ClearFlag_FC(hi3c1.Instance);
 
     return HAL_OK;
 }
