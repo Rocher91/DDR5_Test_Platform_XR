@@ -1132,46 +1132,27 @@ int main(void)
 
   i3c_dbg_i = 0;
 
-  /* Estado tras init */
-  I3C_DBG(1);
 
   /* ------------------------------------------------ */
   /* I2C legacy read antes de SETAASA                 */
   /* ------------------------------------------------ */
 
-  I3C_DBG(2);
+
 
   if (I3C_LL_I2C_PrivateReadReg(0x50, 0x00, value, 1) != HAL_OK)
   {
-      I3C_DBG(50);   // error I2C inicial
-      __NOP();
+
       Error_Handler();
   }
 
-  I3C_DBG(3);   // I2C inicial OK
 
   /* ------------------------------------------------ */
   /* SETAASA -> entrar en I3C Basic                   */
   /* ------------------------------------------------ */
 
-  I3C_DBG(4);
 
   I3C_SETAASA();
-
-
-  I3C_DBG(5);   // SETAASA enviado
-
   HAL_Delay(10);
-
-
-  I3C_DBG(6);   // delay post SETAASA
-
-  /* ------------------------------------------------ */
-  /* I3C private read                                 */
-  /* ------------------------------------------------ */
-
-  I3C_DBG(7);
-
 
   uint8_t rx[8] = {0};
 
@@ -1180,46 +1161,8 @@ int main(void)
         Error_Handler();
     }
 
-  if (I3C_LL_PrivateReadReg(0x50, 0x30, value, 1) != HAL_OK)
-     {
-         Error_Handler();
-     }
 
-  if (I3C_LL_PrivateReadReg(0x50, 0x34, value, 1) != HAL_OK)
-     {
-         Error_Handler();
-     }
 
-  I3C_DBG(8);   // private read OK
-
-  /* ------------------------------------------------ */
-  /* RSTDAA -> volver a I2C                           */
-  /* ------------------------------------------------ */
-
-  I3C_DBG(9);
-
-  I3C_RSTDAA();
-
-  I3C_DBG(10);  // RSTDAA enviado
-
-  HAL_Delay(100);
-
-  I3C_DBG(11);  // delay post RSTDAA
-
-  /* ------------------------------------------------ */
-  /* I2C legacy read después de RSTDAA                */
-  /* ------------------------------------------------ */
-
-  I3C_DBG(12);
-
-  if (I3C_LL_I2C_PrivateReadReg(0x50, 0x00, value, 1) != HAL_OK)
-  {
-      I3C_DBG(70);   // error I2C final
-      __NOP();
-      Error_Handler();
-  }
-
-  I3C_DBG(13);  // I2C final OK
 
   __NOP();
   /* USER CODE END 2 */
